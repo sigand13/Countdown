@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Countdown</title>
+  <style>
+    body {
+      background-image: url('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGhrYTBiajcxcGhndjB3bGYzbXliZ2xvNm05eTVlenE4bHA5dHNzMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/kEiKcedFkd5Zy2JbUa/giphy.gif');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      color: #FFFFFF;
+      font-size: 48px;
+      text-align: center;
+      padding-top: 10%;
+      font-family: sans-serif;
+    }
+
+    #progress-container {
+      width: 80%;
+      height: 40px;
+      background-color: #444;
+      border-radius: 20px;
+      margin: 20px auto;
+      overflow: hidden;
+    }
+
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background-color: #00FF00;
+      transition: width 1s linear;
+    }
+
+    #percent-text {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      font-size: 24px;
+      padding: 10px 20px;
+      margin-top: 10px;
+      border-radius: 10px;
+      border: none;
+      background-color: #ffcc00;
+      color: black;
+      cursor: pointer;
+    }
+
+    input[type="date"],
+    input[type="time"],
+    input[type="text"] {
+      font-size: 20px;
+      padding: 5px 10px;
+      margin: 10px;
+      border-radius: 10px;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="timerbox">Loading...</div>
+  <div id="percent-text"></div>
+  <div id="progress-container">
+    <div id="progress-bar"></div>
+  </div>
+
+  <input type="date" id="dateInput">
+  <input type="time" id="timeInput">
+  <input type="text" id="messageInput" placeholder="Enter finished message">
+  <button onclick="setCustomDate()">Set Date & Time</button><br>
+  <button onclick="triggerFakeCountdown()">Test 3 Seconds</button>
+
+  <script>
+    const startDate = new Date(2025, 4, 15, 0, 0); // May 15, 2025
+    let endDate = new Date(2025, 5, 12, 8, 10);    // June 12, 2025, 08:10
+    const realEndDate = new Date(endDate.getTime());
+
+    const box = document.getElementById("timerbox");
+    const bar = document.getElementById("progress-bar");
+    const percentText = document.getElementById("percent-text");
+
+    const gradientColors = [
+      [255, 0, 0],
+      [255, 165, 0],
+      [255, 255, 0],
+      [173, 255, 47],
+      [0, 255, 0]
+    ];
+
+    let customMessage = "";
+
+    function lerpColor(a, b, t) {
+      return a.map((v, i) => Math.round(v + (b[i] - v) * t));
+    }
+
+    function rgbToHex(rgb) {
+      return '#' + rgb.map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+
+    function getColorByPercent(percent) {
+      const t = percent / 100;
+      const segments = gradientColors.length - 1;
+      const scaledT = t * segments;
+      const i = Math.floor(scaledT);
+      const frac = scaledT - i;
+      if (i >= segments) return rgbToHex(gradientColors[segments]);
+      const c1 = gradientColors[i];
+      const c2 = gradientColors[i + 1];
+      const c = lerpColor(c1, c2, frac);
+      return rgbToHex(c);
+    }
+
+    function update() {
+      const now = new Date();
+      const total = endDate - startDate;
+      const remaining = endDate - now;
+      const elapsed = now - startDate;
+
+      if (remaining <= 0) {
+        box.textContent = customMessage || "DONE!";
+        bar.style.width = "100%";
+        percentText.textContent = "100.00% complete!";
+        document.body.style.backgroundImage = "url('https://i.pinimg.com/originals/ec/c2/12/ecc2124116aa5a0ee1bc466c7b69dd8a.gif')";
+        document.body.style.backgroundPosition = "center";
+        document.body.style.backgroundSize = "cover";
+        return;
+      }
+
+      const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((remaining / (1000 * 60)) % 60);
+      const seconds = Math.floor((remaining / 1000) % 60);
+
+      const percent = Math.min((elapsed / total) * 100, 100);
+      const color = getColorByPercent(percent);
+
+      bar.style.width = percent.toFixed(2) + "%";
+      bar.style.backgroundColor = color;
+      percentText.style.color = color;
+      box.style.color = color;
+      percentText.textContent = percent.toFixed(2) + "% complete";
+
+      box.textContent = `Time left: ${days}d ${hours}h ${minutes}m ${seconds}s`;
+      setTimeout(update, 1000);
+    }
+
+    function triggerFakeCountdown() {
+      const now = new Date();
+      endDate = new Date(now.getTime() + 3000);
+      setTimeout(() => {
+        endDate = new Date(realEndDate.getTime());
+      }, 5000);
+    }
+
+    function setCustomDate() {
+      const dateStr = document.getElementById("dateInput").value;
+      const timeStr = document.getElementById("timeInput").value;
+      const message = document.getElementById("messageInput").value;
+
+      if (!dateStr || !timeStr) {
+        alert("Please enter both date and time.");
+        return;
+      }
+
+      const [year, month, day] = dateStr.split("-").map(Number);
+      const [hour, minute] = timeStr.split(":").map(Number);
+      endDate = new Date(year, month - 1, day, hour, minute);
+      realEndDate.setTime(endDate.getTime());
+
+      customMessage = message || "DONE!";
+    }
+
+    update();
+  </script>
+</body>
+</html>
